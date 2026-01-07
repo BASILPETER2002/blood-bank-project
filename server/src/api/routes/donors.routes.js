@@ -1,5 +1,7 @@
 import express from "express";
 import { authMiddleware, requireRole } from "../../middlewares/auth.middleware.js";
+
+// Make sure these controller names exactly match your donor.controller.js
 import {
   getMyDonorProfile,
   getDonorRequests,
@@ -7,7 +9,7 @@ import {
 
 const router = express.Router();
 
-// Get personal profile
+// The "me" route
 router.get(
   "/me",
   authMiddleware,
@@ -15,7 +17,7 @@ router.get(
   getMyDonorProfile
 );
 
-// Get available SOS requests for this donor
+// The requests route
 router.get(
   "/requests",
   authMiddleware,

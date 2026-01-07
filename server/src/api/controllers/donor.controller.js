@@ -1,13 +1,13 @@
-import DonorProfile from "../../models/DonorProfile.model.js";
+import User from "../../models/User.model.js";
 import Request from "../../models/Request.model.js";
 
 /* ======================================================
-   GET LOGGED-IN DONOR PROFILE
+   GET LOGGED-IN DONOR PROFILE (UPDATED)
    ====================================================== */
 export const getMyDonorProfile = async (req, res) => {
   try {
-    const donor = await DonorProfile.findOne({ user: req.user.id })
-      .populate("user", "name email role");
+    // ✅ FIX: Look in User collection instead of DonorProfile
+    const donor = await User.findById(req.user.id).select("-passwordHash");
 
     if (!donor) {
       return res.status(404).json({
@@ -15,6 +15,7 @@ export const getMyDonorProfile = async (req, res) => {
       });
     }
 
+    // Return format matches what the frontend expects
     res.json(donor);
   } catch (err) {
     console.error("❌ Get donor profile failed:", err);
@@ -25,15 +26,16 @@ export const getMyDonorProfile = async (req, res) => {
 };
 
 /* ======================================================
-   GET OPEN SOS REQUESTS FOR DONOR (BY BLOOD TYPE)
+   GET OPEN SOS REQUESTS FOR DONOR (UPDATED)
    ====================================================== */
 export const getDonorRequests = async (req, res) => {
   try {
-    const donor = await DonorProfile.findOne({ user: req.user.id });
+    // ✅ FIX: Get donor bloodType directly from User collection
+    const donor = await User.findById(req.user.id);
 
-    if (!donor) {
+    if (!donor || !donor.bloodType) {
       return res.status(404).json({
-        message: "Donor profile not found",
+        message: "Donor profile or blood type not found",
       });
     }
 
@@ -52,17 +54,3 @@ export const getDonorRequests = async (req, res) => {
     });
   }
 };
-
-/* ======================================================
-   ⚠️ IMPORTANT
-   DONOR DOES NOT ACCEPT SOS HERE ANYMORE
-   ======================================================
-
-   SOS acceptance is handled ONLY in:
-   ➜ request.controller.js → acceptRequest
-
-   This prevents:
-   ❌ duplicate logic
-   ❌ schema mismatch
-   ❌ hospital not receiving updates
-*/
