@@ -23,17 +23,15 @@ const server = http.createServer(app);
 /* ======================================================
    CONFIGURATION FOR DEPLOYMENT
    ====================================================== */
-// Allow both Localhost (for you) and the Live Frontend (for users)
 const allowedOrigins = [
   "http://localhost:5173",
-  process.env.FRONTEND_URL // You will set this in Render dashboard later
+  "https://blood-bank-project-ecru.vercel.app", // Your main domain
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Allow if the origin is in our list OR if it ends with .vercel.app
+    if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.endsWith(".vercel.app")) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
