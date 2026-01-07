@@ -6,7 +6,8 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { Server } from "socket.io";
 
-import DonorProfile from "./models/DonorProfile.model.js";
+// Import User model to verify donor data
+import User from "./models/User.model.js"; 
 
 /* ROUTES */
 import authRoutes from "./api/routes/auth.routes.js";
@@ -20,17 +21,13 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-/* ======================================================
-   CONFIGURATION FOR DEPLOYMENT
-   ====================================================== */
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://blood-bank-project-ecru.vercel.app", // Your main domain
+  "https://blood-bank-project-ecru.vercel.app",
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow if the origin is in our list OR if it ends with .vercel.app
     if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.endsWith(".vercel.app")) {
       callback(null, true);
     } else {
@@ -40,24 +37,16 @@ const corsOptions = {
   credentials: true,
 };
 
-/* ======================================================
-   EXPRESS MIDDLEWARE
-   ====================================================== */
 app.use(express.json());
-app.use(cors(corsOptions)); // ✅ Updated to use dynamic origins
+app.use(cors(corsOptions));
 
-/* ======================================================
-   SOCKET.IO SETUP
-   ====================================================== */
 const io = new Server(server, {
-  cors: corsOptions, // ✅ Updated to match Express CORS
+  cors: corsOptions,
 });
 
 app.set("io", io);
 
-/* ======================================================
-   SOCKET AUTH MIDDLEWARE
-   ====================================================== */
+/* ================= SOCKET AUTH MIDDLEWARE (FIXED) ================= */
 io.use(async (socket, next) => {
   try {
     const token = socket.handshake.auth?.token;
@@ -65,18 +54,18 @@ io.use(async (socket, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // ✅ FIX: Check the User collection instead of DonorProfile 
+    // since your Atlas data shows bloodType is in the User document.
+    const user = await User.findById(decoded.id);
+
     if (decoded.role === "donor") {
-      const donor = await DonorProfile.findOne({ user: decoded.id });
-      if (!donor || !donor.bloodType) {
+      if (!user || !user.bloodType) {
         return next(new Error("Donor profile incomplete"));
       }
-      socket.user = { id: decoded.id, role: "donor", bloodType: donor.bloodType };
+      socket.user = { id: decoded.id, role: "donor", bloodType: user.bloodType };
     } 
-    else if (decoded.role === "hospital") {
-      socket.user = { id: decoded.id, role: "hospital" };
-    } 
-    else if (decoded.role === "admin") {
-      socket.user = { id: decoded.id, role: "admin" };
+    else {
+      socket.user = { id: decoded.id, role: decoded.role };
     }
 
     next();
@@ -86,26 +75,19 @@ io.use(async (socket, next) => {
   }
 });
 
-/* ======================================================
-   SOCKET CONNECTION HANDLER
-   ====================================================== */
 io.on("connection", (socket) => {
-  if (!socket.user) {
-    console.warn(`⚠️ Socket connected without user data: ${socket.id}`);
-    return socket.disconnect();
-  }
+  if (!socket.user) return socket.disconnect();
 
   const { id, role, bloodType } = socket.user;
-  console.log(`🟢 Socket connected: ${socket.id} | role=${role}`);
-
+  
   if (role === "donor") {
-    console.log(`🩸 Donor [${id}] joined room: donors:${bloodType}`);
     socket.join(`donors:${bloodType}`);
     socket.join(`donor:${id}`);
+    console.log(`🩸 Donor [${id}] joined room: donors:${bloodType}`);
   } 
   else if (role === "hospital") {
-    console.log(`🏥 Hospital [${id}] joined room`);
     socket.join(`hospital:${id}`);
+    console.log(`🏥 Hospital [${id}] connected`);
   }
 
   socket.on("disconnect", () => {
@@ -113,33 +95,25 @@ io.on("connection", (socket) => {
   });
 });
 
-/* ======================================================
-   EXPOSE IO TO REQUESTS
-   ====================================================== */
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
 
-/* ======================================================
-   ROUTES
-   ====================================================== */
+/* ROUTES */
 app.use("/api/auth", authRoutes);
 app.use("/api/donors", donorRoutes);
 app.use("/api/hospitals", hospitalRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/admin", adminRoutes);
 
-/* ======================================================
-   DATABASE + SERVER
-   ====================================================== */
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("✅ MongoDB connected");
     const PORT = process.env.PORT || 5000;
     server.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
   })
   .catch((err) => {

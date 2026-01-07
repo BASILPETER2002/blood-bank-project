@@ -1,7 +1,5 @@
 import express from "express";
-// ✅ Fixed: Changed 'auth' to 'authMiddleware'
 import { authMiddleware, requireRole } from "../../middlewares/auth.middleware.js";
-
 import {
   getMyDonorProfile,
   getDonorRequests,
@@ -9,6 +7,7 @@ import {
 
 const router = express.Router();
 
+// Get personal profile
 router.get(
   "/me",
   authMiddleware,
@@ -16,6 +15,7 @@ router.get(
   getMyDonorProfile
 );
 
+// Get available SOS requests for this donor
 router.get(
   "/requests",
   authMiddleware,
