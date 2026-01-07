@@ -1,0 +1,30 @@
+{
+  "name": "blood-bank-worker",
+  "version": "1.0.0",
+  "description": "Background worker for SMS, email, notifications and cron jobs",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "bullmq": "^5.0.0",
+    "dotenv": "^16.4.0",
+    "ioredis": "^5.4.1",
+    "nodemailer": "^6.9.8",
+    "twilio": "^5.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "blood-bank",
+    "worker",
+    "redis",
+    "bullmq",
+    "background-jobs"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

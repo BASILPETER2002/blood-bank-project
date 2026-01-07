@@ -1,0 +1,44 @@
+{
+  "name": "blood-bank-server",
+  "version": "1.0.0",
+  "description": "Backend API for Blood Bank Management System (MERN Stack)",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.3",
+    "bullmq": "^5.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^4.18.3",
+    "express-validator": "^7.0.0",
+    "framer-motion": "^12.23.26",
+    "helmet": "^7.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.562.0",
+    "mongoose": "^8.2.0",
+    "morgan": "^1.10.0",
+    "react-hot-toast": "^2.6.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "blood-bank",
+    "mern",
+    "express",
+    "socket.io",
+    "mongodb"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
